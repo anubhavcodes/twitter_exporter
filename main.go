@@ -13,6 +13,24 @@ import (
 	"time"
 )
 
+type APIResponse struct {
+	Data Data `json:"data"`
+}
+
+type Data struct {
+	Id            string        `json:"id"`
+	Name          string        `json:"name"`
+	Username      string        `json:"username"`
+	PublicMetrics PublicMetrics `json:"public_metrics"`
+}
+
+type PublicMetrics struct {
+	FollowersCount int `json:"followers_count"`
+	FollowingCount int `json:"following_count"`
+	TweetCount     int `json:"tweet_count"`
+	ListedCount    int `json:"listed_count"`
+}
+
 var (
 	twitterFollowers = promauto.NewGauge(prometheus.GaugeOpts{
 		Name: "twitter_followers",
@@ -78,24 +96,6 @@ func getTwitterData() (error, []byte) {
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	return err, body
-}
-
-type APIResponse struct {
-	Data Data `json:"data"`
-}
-
-type Data struct {
-	Id            string        `json:"id"`
-	Name          string        `json:"name"`
-	Username      string        `json:"username"`
-	PublicMetrics PublicMetrics `json:"public_metrics"`
-}
-
-type PublicMetrics struct {
-	FollowersCount int `json:"followers_count"`
-	FollowingCount int `json:"following_count"`
-	TweetCount     int `json:"tweet_count"`
-	ListedCount    int `json:"listed_count"`
 }
 
 func getPublicMetrics(apiResponse []byte) PublicMetrics {
