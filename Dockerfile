@@ -1,9 +1,13 @@
-FROM golang:latest
+FROM golang:1.16.3-alpine3.13 as builder
+EXPOSE 8080
 
-WORKDIR /app
+ENV CGO_ENABLED=0
 
-COPY main.go .
+WORKDIR /
+COPY . .
+RUN go build -o app main.go
 
-RUN go get github.com/prometheus/client_golang/prometheus
+FROM scratch
+COPY --from=builder /app .
 
-CMD ["go", "run", "main.go"]
+ENTRYPOINT ["./app"]
