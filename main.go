@@ -13,6 +13,24 @@ import (
 	"time"
 )
 
+type APIResponse struct {
+	Data Data `json:"data"`
+}
+
+type Data struct {
+	Id            string        `json:"id"`
+	Name          string        `json:"name"`
+	Username      string        `json:"username"`
+	PublicMetrics PublicMetrics `json:"public_metrics"`
+}
+
+type PublicMetrics struct {
+	FollowersCount int `json:"followers_count"`
+	FollowingCount int `json:"following_count"`
+	TweetCount     int `json:"tweet_count"`
+	ListedCount    int `json:"listed_count"`
+}
+
 var (
 	twitterFollowers = promauto.NewGauge(prometheus.GaugeOpts{
 		Name: "twitter_followers",
@@ -33,7 +51,7 @@ var (
 )
 
 func recordMetrics() {
-	go func(){
+	go func() {
 		for {
 			err, body := getTwitterData()
 			if err != nil {
@@ -50,7 +68,6 @@ func recordMetrics() {
 	}()
 }
 
-
 func main() {
 	recordMetrics()
 	http.Handle("/metrics", promhttp.Handler())
@@ -61,7 +78,7 @@ func main() {
 func getTwitterData() (error, []byte) {
 	var TwitterToken = os.Getenv("TWITTER_TOKEN")
 	var TwitterHandle = os.Getenv("TWITTER_HANDLE")
-	if TwitterToken == "" || TwitterHandle == ""{
+	if TwitterToken == "" || TwitterHandle == "" {
 		log.Println("Please define TWITTER_TOKEN and the TWITTER_HANDLE environment variable")
 		os.Exit(100)
 	}
@@ -81,25 +98,7 @@ func getTwitterData() (error, []byte) {
 	return err, body
 }
 
-type APIResponse struct {
-	Data Data `json:"data"`
-}
-
-type Data struct {
-	Id string `json:"id"`
-	Name string `json:"name"`
-	Username string `json:"username"`
-	PublicMetrics PublicMetrics `json:"public_metrics"`
-}
-
-type PublicMetrics struct {
-	FollowersCount int `json:"followers_count"`
-	FollowingCount int `json:"following_count"`
-	TweetCount int `json:"tweet_count"`
-	ListedCount int `json:"listed_count"`
-}
-
-func getPublicMetrics(apiResponse []byte) PublicMetrics  {
+func getPublicMetrics(apiResponse []byte) PublicMetrics {
 	var response APIResponse
 	if err := json.Unmarshal(apiResponse, &response); err != nil {
 		log.Println(err)
